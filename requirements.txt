@@ -6,4 +6,3 @@ numpy
 Pillow
 scikit-learn
 gdown
-ntip
