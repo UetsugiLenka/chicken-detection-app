@@ -23,20 +23,27 @@ def download_models():
     # Buat folder models
     if not os.path.exists("models"):
         os.makedirs("models")
-    
-    # Download YOLOv11m
-    yolo_path = "models/yolo11m.pt"
-    if not os.path.exists(yolo_path):
-        st.info("📥 Downloading YOLOv11m model...")
-        # Ganti dengan ID file kamu dari Google Drive
-     gdown.download("https://drive.google.com/file/d/1zNxD98F0o12XPFgEM9ciwsb3hDPAD8Ll/view?usp=sharing", yolo_path, quiet=False)
-    
-    # Download ResNet50
-    resnet_path = "models/resnet_model.keras"
-    if not os.path.exists(resnet_path):
-        st.info("📥 Downloading ResNet50 model...")
-        # Ganti dengan ID file kamu dari Google Drive
-    gdown.download("https://drive.google.com/file/d/1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v/view?usp=sharing", resnet_path, quiet=False)
+    # DOwnload Yolo11m
+yolo_path = "models/yolo11m.pt"
+if not os.path.exists(yolo_path):
+    st.info("📥 Downloading YOLOv11m model...")
+    # Ganti dengan ID file kamu dari Google Drive
+    gdown.download(
+        "https://drive.google.com/uc?id=1zNxD98F0o12XPFgEM9ciwsb3hDPAD8Ll",
+        yolo_path,
+        quiet=False
+    )
+
+# Download ResNet50
+resnet_path = "models/resnet_model.keras"
+if not os.path.exists(resnet_path):
+    st.info("📥 Downloading ResNet50 model...")
+    # Ganti dengan ID file kamu dari Google Drive
+    gdown.download(
+        "https://drive.google.com/uc?id=1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v",
+        resnet_path,
+        quiet=False
+    )
 
 # Jalankan download model
 download_models()
@@ -293,6 +300,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Emkayn 2025")
+
 
 
 
