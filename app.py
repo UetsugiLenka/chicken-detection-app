@@ -45,9 +45,6 @@ def download_models():
         st.info("📥 Downloading ResNet50 model...")
         # Ganti dengan ID file kamu dari Google Drive
         gdown.download("https://drive.google.com/uc?id=1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v", resnet_path, quiet=False)
-            st.success("✅ ResNet50 downloaded successfully!")
-        except Exception as e:
-            st.error(f"❌ Gagal download ResNet50: {e}")
 
 # Jalankan download model
 download_models()
