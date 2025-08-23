@@ -1,11 +1,11 @@
-# app.py (diperbaiki untuk download model otomatis)
+# app.py 
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
 import os
 import time
-import gdown  # ⬅️ Tambahkan ini
+import gdown
 
 # --- DOWNLOAD MODEL OTOMATIS ---
 @st.cache_resource
@@ -291,4 +291,5 @@ elif input_option == "Kamera Live":
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Emkayn 2025")
+
