@@ -1,4 +1,4 @@
-# app.py 
+# app.py (Full Hugging Face Version)
 import streamlit as st
 
 # --- PAGE CONFIG ---
@@ -13,29 +13,46 @@ import numpy as np
 from PIL import Image
 import os
 import time
-import gdown
+from huggingface_hub import hf_hub_download  
 
-# --- DOWNLOAD MODEL OTOMATIS ---
+# --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
 @st.cache_resource
 def download_models():
-    """Download model dari Google Drive jika belum ada"""
+    """Download model dari Hugging Face jika belum ada"""
     
     # Buat folder models
     if not os.path.exists("models"):
         os.makedirs("models")
-    # Download YOLOv11m
+    
+    # Download YOLOv11m dari Hugging Face
     yolo_path = "models/yolo11m.pt"
     if not os.path.exists(yolo_path):
-        st.info("📥 Downloading YOLOv11m model...")
-        # Ganti dengan ID file kamu dari Google Drive
-        gdown.download("https://drive.google.com/uc?id=1zNxD98F0o12XPFgEM9ciwsb3hDPAD8Ll", yolo_path, quiet=False)
+        st.info("📥 Downloading YOLOv11m model from Hugging Face...")
+        try:
+            hf_hub_download(
+                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
+                filename="yolo11m.pt",
+                revision="main",
+                local_dir="models"
+            )
+            st.success("✅ YOLOv11m downloaded successfully!")
+        except Exception as e:
+            st.error(f"❌ Gagal download YOLOv11m: {e}")
     
-    # Download ResNet50
+    # Download ResNet50 dari Hugging Face
     resnet_path = "models/resnet_model.keras"
     if not os.path.exists(resnet_path):
-        st.info("📥 Downloading ResNet50 model...")
-        # Ganti dengan ID file kamu dari Google Drive
-        gdown.download("https://drive.google.com/uc?id=1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v", resnet_path, quiet=False)
+        st.info("📥 Downloading ResNet50 model from Hugging Face...")
+        try:
+            hf_hub_download(
+                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
+                filename="resnet_model.keras",
+                revision="main",
+                local_dir="models"
+            )
+            st.success("✅ ResNet50 downloaded successfully!")
+        except Exception as e:
+            st.error(f"❌ Gagal download ResNet50: {e}")
 
 # Jalankan download model
 download_models()
@@ -291,13 +308,4 @@ elif input_option == "Kamera Live":
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Emkayn 2025")
-
-
-
-
-
-
-
-
-
+st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
