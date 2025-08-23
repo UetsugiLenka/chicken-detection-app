@@ -1,5 +1,13 @@
 # app.py 
 import streamlit as st
+
+# --- PAGE CONFIG ---
+st.set_page_config(
+    page_title="🐔 Deteksi & Klasifikasi Daging Ayam",
+    page_icon="🐔",
+    layout="wide"
+)
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -41,13 +49,6 @@ try:
 except Exception as e:
     st.error(f"❌ Error importing modules: {e}")
     st.stop()
-
-# --- PAGE CONFIG ---
-st.set_page_config(
-    page_title="🐔 Deteksi & Klasifikasi Daging Ayam",
-    page_icon="🐔",
-    layout="wide"
-)
 
 # --- TITLE ---
 st.title("🐔 Deteksi & Klasifikasi Daging Ayam")
@@ -292,4 +293,5 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Emkayn 2025")
+
 
