@@ -1,9 +1,37 @@
+# app.py (diperbaiki untuk download model otomatis)
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
 import os
 import time
+import gdown  # ⬅️ Tambahkan ini
+
+# --- DOWNLOAD MODEL OTOMATIS ---
+@st.cache_resource
+def download_models():
+    """Download model dari Google Drive jika belum ada"""
+    
+    # Buat folder models
+    if not os.path.exists("models"):
+        os.makedirs("models")
+    
+    # Download YOLOv11m
+    yolo_path = "models/yolo11m.pt"
+    if not os.path.exists(yolo_path):
+        st.info("📥 Downloading YOLOv11m model...")
+        # Ganti dengan ID file kamu dari Google Drive
+        gdown.download("https://drive.google.com/file/d/1zNxD98F0o12XPFgEM9ciwsb3hDPAD8Ll/view?usp=sharing", yolo_path, quiet=False)
+    
+    # Download ResNet50
+    resnet_path = "models/resnet_model.keras"
+    if not os.path.exists(resnet_path):
+        st.info("📥 Downloading ResNet50 model...")
+        # Ganti dengan ID file kamu dari Google Drive
+        gdown.download("https://drive.google.com/file/d/1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v/view?usp=sharing", resnet_path, quiet=False)
+
+# Jalankan download model
+download_models()
 
 # --- IMPORT MODEL MODULES ---
 try:
@@ -58,7 +86,7 @@ confidence_threshold = st.sidebar.slider(
     "🎯 Confidence Threshold",
     min_value=0.1,
     max_value=1.0,
-    value=0.3,
+    value=0.5,
     step=0.05,
     help="Tingkat kepercayaan minimum untuk menampilkan bounding box"
 )
@@ -155,7 +183,7 @@ if input_option == "Upload Gambar":
             
             st.dataframe(df_results, use_container_width=True)
             
-            # Statistik (case-insensitive)
+            # Statistik
             segar_count = len([r for r in results if r['freshness'].lower() == 'segar'])
             busuk_count = len([r for r in results if r['freshness'].lower() == 'busuk'])
             
@@ -186,7 +214,6 @@ elif input_option == "Kamera Live":
 
     if start_button:
         try:
-            #cap = cv2.VideoCapture('http://192.168.1.3:8080/video')
             cap = cv2.VideoCapture(0)  # Kamera default
             if not cap.isOpened():
                 st.error("❌ Gagal membuka kamera")
@@ -232,7 +259,7 @@ elif input_option == "Kamera Live":
                         x1, y1, x2, y2 = result['bbox']
                         freshness = result['freshness']
                         
-                        # Warna berdasarkan kesegaran (case-insensitive)
+                        # Warna berdasarkan kesegaran
                         color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255) if freshness.lower() == 'busuk' else (255, 255, 0)
                         
                         # Gambar kotak
