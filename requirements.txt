@@ -1,10 +1,11 @@
 streamlit
 ultralytics
 tensorflow
-opencv-python-headless==4.8.1.78
+opencv-python-headless==4.9.0.80 
 numpy
 Pillow
 scikit-learn
 gdown  
+
 
 
