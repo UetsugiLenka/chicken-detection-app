@@ -97,6 +97,31 @@ input_option = st.sidebar.radio(
     ("Upload Gambar", "Kamera Live")
 )
 
+# --- SIDEBAR ---
+st.sidebar.header("📷 Pilihan Input")
+
+# Deteksi apakah di lokal atau cloud
+import socket
+try:
+    is_local = "localhost" in socket.gethostname() or "127.0.0.1" in socket.gethostbyname(socket.gethostname())
+except:
+    is_local = False
+
+# Hanya tampilkan kamera live jika di lokal
+if is_local:
+    input_option = st.sidebar.radio(
+        "Pilih sumber gambar:",
+        ("Upload Gambar", "Kamera Live")
+    )
+else:
+    input_option = st.sidebar.radio(
+        "Pilih sumber gambar:",
+        ("Upload Gambar",)  # Hanya upload di cloud
+    )
+    st.sidebar.info("ℹ️ Kamera Live hanya tersedia di lokal")
+
+
+
 # --- CONFIDENCE THRESHOLD SLIDER ---
 st.sidebar.header("⚙️ Pengaturan Deteksi")
 confidence_threshold = st.sidebar.slider(
@@ -309,6 +334,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
