@@ -23,7 +23,7 @@ class ChickenPartDetector:
         """
         try:
             # Deteksi dengan YOLO
-            results = self.model(image, batch=1, conf=conf_threshold, imgsz=320, verbose=False)
+            results = self.model(image, batch=1, conf=conf_threshold, imgsz=320, iou=0.5, verbose=False)
             result = results[0]
             boxes = result.boxes
             
@@ -81,3 +81,4 @@ class ChickenPartDetector:
             
         except Exception as e:
             raise Exception(f"Detection error: {str(e)}")
+
