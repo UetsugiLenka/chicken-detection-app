@@ -46,4 +46,21 @@ class ChickenPartDetector:
                 else:
                     label = f"Part-{cls_id}"
                 
+                # Gambar bounding box
+                color = (0, 255, 0)  # Hijau
+                cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
+                
+                # Tambahkan label
+                label_text = f"{label} {conf:.2f}"
+                cv2.putText(img_with_boxes, label_text, (x1, y1 - 10),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                
+                # Simpan deteksi
+                detections.append({
+                    'bbox': (x1, y1, x2, y2),
+                    'label': label,
+                    'confidence': conf,
+                    'class_id': cls_id
+                })
+        
         return detections, img_with_boxes
