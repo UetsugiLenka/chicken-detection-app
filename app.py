@@ -8,8 +8,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Tambahkan thumbnail ---
-st.image("https://via.placeholder.com/800x600.png?text=Deteksi+Daging+Ajam", caption="Deteksi & Klasifikasi Daging Ayam", use_container_width=True)
 
 import cv2
 import numpy as np
@@ -317,5 +315,6 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
