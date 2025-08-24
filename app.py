@@ -17,6 +17,7 @@ import time
 from huggingface_hub import hf_hub_download  
 
 # --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
+# --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
 @st.cache_resource
 def download_models():
     """Download model dari Hugging Face jika belum ada"""
@@ -31,7 +32,7 @@ def download_models():
         st.info("📥 Downloading YOLOv11m model from Hugging Face...")
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models",  
+                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
                 filename="yolo11m.pt",
                 revision="main",
                 local_dir="models"
@@ -48,7 +49,7 @@ def download_models():
         st.info("📥 Downloading ResNet50 model from Hugging Face...")
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models", 
+                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
                 filename="resnet_model.keras",
                 revision="main",
                 local_dir="models"
