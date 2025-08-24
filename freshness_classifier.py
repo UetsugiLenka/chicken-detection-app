@@ -36,4 +36,5 @@ class FreshnessClassifier:
         prediction = self.le.inverse_transform([pred_class])[0]
         confidence = pred_prob if pred_prob > 0.5 else 1 - pred_prob
         
+
         return prediction, confidence
