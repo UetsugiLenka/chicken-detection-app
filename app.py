@@ -1,4 +1,4 @@
-# app.py (Full Hugging Face Version)
+# app.py (Full Hugging Face Version - Label Fix)
 import streamlit as st
 
 # --- PAGE CONFIG ---
@@ -13,7 +13,6 @@ import numpy as np
 from PIL import Image
 import os
 import time
-import shutil
 from huggingface_hub import hf_hub_download  
 
 # --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
@@ -25,13 +24,13 @@ def download_models():
     if not os.path.exists("models"):
         os.makedirs("models")
     
-    # Download YOLOv11m dari Hugging Face
+    # Download YOLOv11m
     yolo_path = "models/yolo11m.pt"
     if not os.path.exists(yolo_path):
         st.info("📥 Downloading YOLOv11m model from Hugging Face...")
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
+                repo_id="UetsugiLenka/chicken-models",
                 filename="yolo11m.pt",
                 revision="main",
                 local_dir="models"
@@ -40,13 +39,13 @@ def download_models():
         except Exception as e:
             st.error(f"❌ Gagal download YOLOv11m: {e}")
     
-    # Download ResNet50 dari Hugging Face
+    # Download ResNet50
     resnet_path = "models/resnet_model.keras"
     if not os.path.exists(resnet_path):
         st.info("📥 Downloading ResNet50 model from Hugging Face...")
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
+                repo_id="UetsugiLenka/chicken-models",
                 filename="resnet_model.keras",
                 revision="main",
                 local_dir="models"
@@ -54,6 +53,7 @@ def download_models():
             st.success("✅ ResNet50 downloaded successfully!")
         except Exception as e:
             st.error(f"❌ Gagal download ResNet50: {e}")
+
 # Jalankan download model
 download_models()
 
@@ -93,14 +93,13 @@ st.success("✅ Model berhasil dimuat!")
 # --- SIDEBAR ---
 st.sidebar.header("📷 Pilihan Input")
 
-# Deteksi apakah di lokal atau cloud
+# Deteksi lokal/cloud
 import socket
 try:
     is_local = "localhost" in socket.gethostname() or "127.0.0.1" in socket.gethostbyname(socket.gethostname())
 except:
     is_local = False
 
-# Hanya tampilkan kamera live jika di lokal
 if is_local:
     input_option = st.sidebar.radio(
         "Pilih sumber gambar:",
@@ -109,11 +108,9 @@ if is_local:
 else:
     input_option = st.sidebar.radio(
         "Pilih sumber gambar:",
-        ("Upload Gambar",)  # Hanya upload di cloud
+        ("Upload Gambar",)
     )
     st.sidebar.info("ℹ️ Kamera Live hanya tersedia di lokal")
-
-
 
 # --- CONFIDENCE THRESHOLD SLIDER ---
 st.sidebar.header("⚙️ Pengaturan Deteksi")
@@ -122,8 +119,7 @@ confidence_threshold = st.sidebar.slider(
     min_value=0.1,
     max_value=1.0,
     value=0.5,
-    step=0.05,
-    help="Tingkat kepercayaan minimum untuk menampilkan bounding box"
+    step=0.05
 )
 
 st.sidebar.markdown("---")
@@ -139,8 +135,7 @@ if input_option == "Upload Gambar":
     
     uploaded_file = st.file_uploader(
         "Pilih gambar...", 
-        type=["jpg", "jpeg", "png"],
-        help="Upload gambar daging ayam untuk deteksi dan klasifikasi"
+        type=["jpg", "jpeg", "png"]
     )
 
 if uploaded_file is not None:
@@ -167,20 +162,6 @@ if uploaded_file is not None:
                 crop = image_cv[y1:y2, x1:x2]
                 
                 if crop.size > 0:
-                    # Debug: Cek ukuran crop
-                    print(f"📦 Crop {i+1} size: {crop.shape}")
-                    
-                    # Cek jika crop terlalu kecil
-                    if crop.shape[0] < 10 or crop.shape[1] < 10:
-                        st.warning(f"⚠️ Crop {i+1} terlalu kecil: {crop.shape}")
-                        results.append({
-                            'part': det['label'],
-                            'freshness': 'Too Small',
-                            'confidence': 0.0,
-                            'bbox': (x1, y1, x2, y2)
-                        })
-                        continue
-                    
                     try:
                         pred, conf = classifier.classify(crop)
                         results.append({
@@ -189,7 +170,6 @@ if uploaded_file is not None:
                             'confidence': conf,
                             'bbox': (x1, y1, x2, y2)
                         })
-                        print(f"✅ Classified {det['label']}: {pred} ({conf:.2f})")
                     except Exception as e:
                         st.error(f"❌ Error klasifikasi part {i+1} ({det['label']}): {str(e)}")
                         results.append({
@@ -200,7 +180,7 @@ if uploaded_file is not None:
                         })
             klasifikasi_time = time.time() - klasifikasi_start
 
-    # 🔍 Filter results yang tumpang tindih (manual NMS)
+    # 🔍 Filter overlap (manual NMS)
     filtered_results = []
     used_boxes = []
 
@@ -208,11 +188,9 @@ if uploaded_file is not None:
         x1, y1, x2, y2 = result['bbox']
         area = (x2 - x1) * (y2 - y1)
         
-        # Cek apakah kotak ini sudah digunakan
         overlap = False
         for used in used_boxes:
             ux1, uy1, ux2, uy2 = used
-            # Hitung intersection
             ix1, iy1 = max(x1, ux1), max(y1, uy1)
             ix2, iy2 = min(x2, ux2), min(y2, uy2)
             
@@ -220,8 +198,7 @@ if uploaded_file is not None:
                 intersection = (ix2 - ix1) * (iy2 - iy1)
                 union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
                 iou = intersection / union if union > 0 else 0
-                
-                if iou > 0.5:  # Threshold overlap
+                if iou > 0.5:
                     overlap = True
                     break
         
@@ -229,7 +206,7 @@ if uploaded_file is not None:
             filtered_results.append(result)
             used_boxes.append((x1, y1, x2, y2))
 
-    results = filtered_results  # Gunakan hasil yang sudah difilter
+    results = filtered_results
 
     # Gambar bounding box & label
     img_with_boxes = img_bgr.copy()
@@ -237,192 +214,89 @@ if uploaded_file is not None:
         x1, y1, x2, y2 = result['bbox']
         freshness = result['freshness']
         
-        # Warna berdasarkan kesegaran (case-insensitive)
-        color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255) if freshness.lower() == 'busuk' else (255, 255, 0)
+        color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255)
         
-        # Gambar kotak
         cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
         
-        # Tambah label dengan background hitam untuk kontras
-        label = f"{result['part']}: {freshness} ({result['confidence']:.2f})"
+        # --- Label diperbaiki ---
+        label = f"{result['part']} - {freshness} ({result['confidence']:.2f})"
         text_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
-        
-        # Tentukan posisi label (di luar kotak)
-        label_x = x1
-        label_y = y1 - 10
-        
-        # Pastikan teks tidak keluar dari gambar
+        label_x, label_y = x1, y1 - 10
         if label_y < 10:
             label_y = y1 + text_size[1] + 10
-        
-        # Gambar background hitam untuk teks
         cv2.rectangle(img_with_boxes, 
                      (label_x, label_y - text_size[1] - 5), 
                      (label_x + text_size[0], label_y + 5), 
                      (0, 0, 0), -1)
-        
-        # Tambahkan teks
         cv2.putText(img_with_boxes, label, (label_x, label_y),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-    # Tampilkan hasil
     img_rgb = cv2.cvtColor(img_with_boxes, cv2.COLOR_BGR2RGB)
     st.image(img_rgb, caption="Hasil Deteksi & Klasifikasi", use_container_width=True)
 
-    # Tampilkan tabel hasil
+    # Tabel hasil
     if results:
-        st.subheader("📋 Hasil Klasifikasi")
-        
-        # Buat dataframe
         import pandas as pd
         df_results = pd.DataFrame(results)
         df_results = df_results[['part', 'freshness', 'confidence']]
         df_results.columns = ['Part Ayam', 'Kesegaran', 'Confidence']
-        
         st.dataframe(df_results, use_container_width=True)
-        
-        # Statistik (case-insensitive)
-        segar_count = len([r for r in results if r['freshness'].lower() == 'segar'])
-        busuk_count = len([r for r in results if r['freshness'].lower() == 'busuk'])
-        
-        st.markdown(f"""
-        📊 **Statistik:**
-        - 🟢 **Segar**: {segar_count} part
-        - 🔴 **Busuk**: {busuk_count} part
-        - ⏱️ **Waktu Deteksi**: {deteksi_time:.2f} detik
-        - ⏱️ **Waktu Klasifikasi**: {klasifikasi_time:.2f} detik
-        """)
-    else:
-        st.warning("❌ Tidak ada part ayam terdeteksi (confidence < threshold)")
-
 
 # --- KAMERA LIVE ---
 elif input_option == "Kamera Live":
     if not is_local:
-        st.warning("🚫 Fitur kamera hanya tersedia di lingkungan lokal.")
+        st.warning("🚫 Fitur kamera hanya tersedia di lokal.")
     else:
         st.subheader("📹 Kamera Live - Deteksi Real-Time")
-        st.info("💡 Izinkan akses kamera di browser. Tekan tombol 'Start' di bawah.")
-    
-    # Tombol kontrol
-    col1, col2 = st.columns(2)
-    with col1:
-        start_button = st.button("▶️ Start Kamera", key="start_kamera")
-    with col2:
-        stop_button = st.button("⏹️ Stop Kamera", key="stop_kamera")
+        st.info("💡 Izinkan akses kamera di browser. Tekan tombol 'Start'.")
 
     FRAME_WINDOW = st.image([])
-    cap = None
+    cap = cv2.VideoCapture(0)
 
-    if start_button:
-        try:
-            cap = cv2.VideoCapture(0)  # Kamera default
-            if not cap.isOpened():
-                st.error("❌ Gagal membuka kamera")
-            else:
-                st.success("✅ Kamera berhasil diakses")
+    if not cap.isOpened():
+        st.error("❌ Gagal membuka kamera")
+    else:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            detections, img_bgr = detector.detect(frame, conf_threshold=confidence_threshold)
+            results = []
+            for det in detections:
+                x1, y1, x2, y2 = map(int, det['bbox'])
+                crop = frame[y1:y2, x1:x2]
+                if crop.size > 0:
+                    try:
+                        pred, conf = classifier.classify(crop)
+                        results.append({
+                            'part': det['label'],
+                            'freshness': pred,
+                            'confidence': conf,
+                            'bbox': (x1, y1, x2, y2)
+                        })
+                    except:
+                        pass
+            
+            img_with_boxes = img_bgr.copy()
+            for result in results:
+                x1, y1, x2, y2 = result['bbox']
+                freshness = result['freshness']
+                color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255)
+                cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
                 
-                # Loop kamera
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        st.error("❌ Gagal membaca frame dari kamera")
-                        break
-                    
-                    # Deteksi part ayam
-                    detections, img_bgr = detector.detect(frame, conf_threshold=confidence_threshold)
-                    
-                    # Klasifikasi kesegaran
-                    results = []
-                    for det in detections:
-                        x1, y1, x2, y2 = map(int, det['bbox'])
-                        crop = frame[y1:y2, x1:x2]
-                        
-                        if crop.size > 0:
-                            try:
-                                pred, conf = classifier.classify(crop)
-                                results.append({
-                                    'part': det['label'],
-                                    'freshness': pred,
-                                    'confidence': conf,
-                                    'bbox': (x1, y1, x2, y2)
-                                })
-                            except:
-                                results.append({
-                                    'part': det['label'],
-                                    'freshness': 'Error',
-                                    'confidence': 0.0,
-                                    'bbox': (x1, y1, x2, y2)
-                                })
-                    
-                    # 🔍 Filter results yang tumpang tindih (juga untuk kamera live)
-                    filtered_results = []
-                    used_boxes = []
+                # --- Label diperbaiki ---
+                label = f"{result['part']} - {freshness} ({result['confidence']:.2f})"
+                cv2.putText(img_with_boxes, label, (x1, y1-10), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-                    for result in results:
-                        x1, y1, x2, y2 = result['bbox']
-                        area = (x2 - x1) * (y2 - y1)
-                        
-                        # Cek apakah kotak ini sudah digunakan
-                        overlap = False
-                        for used in used_boxes:
-                            ux1, uy1, ux2, uy2 = used
-                            # Hitung intersection
-                            ix1, iy1 = max(x1, ux1), max(y1, uy1)
-                            ix2, iy2 = min(x2, ux2), min(y2, uy2)
-                            
-                            if ix1 < ix2 and iy1 < iy2:
-                                intersection = (ix2 - ix1) * (iy2 - iy1)
-                                union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
-                                iou = intersection / union if union > 0 else 0
-                                
-                                if iou > 0.5:  # Threshold overlap
-                                    overlap = True
-                                    break
-                        
-                        if not overlap:
-                            filtered_results.append(result)
-                            used_boxes.append((x1, y1, x2, y2))
+            img_rgb = cv2.cvtColor(img_with_boxes, cv2.COLOR_BGR2RGB)
+            FRAME_WINDOW.image(img_rgb, channels="RGB", caption="Live Detection")
+            time.sleep(0.03)
 
-                    results = filtered_results  # Gunakan hasil yang sudah difilter
-
-                    # Gambar bounding box & label
-                    img_with_boxes = img_bgr.copy()
-                    for result in results:
-                        x1, y1, x2, y2 = result['bbox']
-                        freshness = result['freshness']
-                        
-                        # Warna berdasarkan kesegaran
-                        color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255) if freshness.lower() == 'busuk' else (255, 255, 0)
-                        
-                        # Gambar kotak
-                        cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
-                        
-                        # Tambah label
-                        label = f"{result['part']}: {freshness} ({result['confidence']:.2f})"
-                        cv2.putText(img_with_boxes, label, (x1, y1-10), 
-                                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-                    
-                    # Tampilkan ke Streamlit
-                    img_rgb = cv2.cvtColor(img_with_boxes, cv2.COLOR_BGR2RGB)
-                    FRAME_WINDOW.image(img_rgb, channels="RGB", caption="Live Detection")
-                    
-                    # Tambahkan delay kecil agar tidak terlalu cepat
-                    time.sleep(0.03)
-                    
-                    # Cek apakah tombol stop ditekan
-                    if stop_button:
-                        break
-                        
-        except Exception as e:
-            st.error(f"❌ Error saat membuka kamera: {e}")
-        finally:
-            if cap:
-                cap.release()
-                FRAME_WINDOW.empty()
-                st.info("⏹️ Kamera dihentikan")
+        cap.release()
+        FRAME_WINDOW.empty()
 
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
-
