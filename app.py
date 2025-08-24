@@ -143,125 +143,158 @@ if input_option == "Upload Gambar":
         help="Upload gambar daging ayam untuk deteksi dan klasifikasi"
     )
 
-    if uploaded_file is not None:
-        # Baca gambar
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Gambar yang Diupload", use_container_width=True)
+if uploaded_file is not None:
+    # Baca gambar
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Gambar yang Diupload", use_container_width=True)
 
-        # Konversi ke OpenCV
-        image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    # Konversi ke OpenCV
+    image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
-        # Deteksi part ayam
-        with st.spinner("🔍 Mendeteksi part ayam..."):
-            start_time = time.time()
-            detections, img_bgr = detector.detect(image_cv, conf_threshold=confidence_threshold)
-            deteksi_time = time.time() - start_time
+    # Deteksi part ayam
+    with st.spinner("🔍 Mendeteksi part ayam..."):
+        start_time = time.time()
+        detections, img_bgr = detector.detect(image_cv, conf_threshold=confidence_threshold)
+        deteksi_time = time.time() - start_time
 
-        # Klasifikasi kesegaran
-        results = []
-        if detections:
-            with st.spinner("🧠 Mengklasifikasi kesegaran..."):
-                klasifikasi_start = time.time()
-                for i, det in enumerate(detections):
-                    x1, y1, x2, y2 = map(int, det['bbox'])
-                    crop = image_cv[y1:y2, x1:x2]
-                    
-                    if crop.size > 0:
-                        try:
-                            pred, conf = classifier.classify(crop)
-                            results.append({
-                                'part': det['label'],
-                                'freshness': pred,
-                                'confidence': conf,
-                                'bbox': (x1, y1, x2, y2)
-                            })
-                        except Exception as e:
-                            st.warning(f"⚠️ Gagal klasifikasi part {i+1}: {e}")
-                            results.append({
-                                'part': det['label'],
-                                'freshness': 'Error',
-                                'confidence': 0.0,
-                                'bbox': (x1, y1, x2, y2)
-                            })
-                klasifikasi_time = time.time() - klasifikasi_start
-
-        # 🔍 Filter results yang tumpang tindih
-        filtered_results = []
-        used_boxes = []
-
-        for result in results:
-            x1, y1, x2, y2 = result['bbox']
-            area = (x2 - x1) * (y2 - y1)
-            
-            # Cek apakah kotak ini sudah digunakan
-            overlap = False
-            for used in used_boxes:
-                ux1, uy1, ux2, uy2 = used
-                # Hitung intersection
-                ix1, iy1 = max(x1, ux1), max(y1, uy1)
-                ix2, iy2 = min(x2, ux2), min(y2, uy2)
+    # Klasifikasi kesegaran
+    results = []
+    if detections:
+        with st.spinner("🧠 Mengklasifikasi kesegaran..."):
+            klasifikasi_start = time.time()
+            for i, det in enumerate(detections):
+                x1, y1, x2, y2 = map(int, det['bbox'])
+                crop = image_cv[y1:y2, x1:x2]
                 
-                if ix1 < ix2 and iy1 < iy2:
-                    intersection = (ix2 - ix1) * (iy2 - iy1)
-                    union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
-                    iou = intersection / union if union > 0 else 0
+                if crop.size > 0:
+                    # Debug: Cek ukuran crop
+                    print(f"📦 Crop {i+1} size: {crop.shape}")
                     
-                    if iou > 0.5:  # Threshold overlap
-                        overlap = True
-                        break
-            
-            if not overlap:
-                filtered_results.append(result)
-                used_boxes.append((x1, y1, x2, y2))
+                    # Cek jika crop terlalu kecil
+                    if crop.shape[0] < 10 or crop.shape[1] < 10:
+                        st.warning(f"⚠️ Crop {i+1} terlalu kecil: {crop.shape}")
+                        results.append({
+                            'part': det['label'],
+                            'freshness': 'Too Small',
+                            'confidence': 0.0,
+                            'bbox': (x1, y1, x2, y2)
+                        })
+                        continue
+                    
+                    try:
+                        pred, conf = classifier.classify(crop)
+                        results.append({
+                            'part': det['label'],
+                            'freshness': pred,
+                            'confidence': conf,
+                            'bbox': (x1, y1, x2, y2)
+                        })
+                        print(f"✅ Classified {det['label']}: {pred} ({conf:.2f})")
+                    except Exception as e:
+                        st.error(f"❌ Error klasifikasi part {i+1} ({det['label']}): {str(e)}")
+                        results.append({
+                            'part': det['label'],
+                            'freshness': 'Error',
+                            'confidence': 0.0,
+                            'bbox': (x1, y1, x2, y2)
+                        })
+            klasifikasi_time = time.time() - klasifikasi_start
 
-        results = filtered_results  # Gunakan hasil yang sudah difilter
+    # 🔍 Filter results yang tumpang tindih (manual NMS)
+    filtered_results = []
+    used_boxes = []
 
-        # Gambar bounding box & label
-        img_with_boxes = img_bgr.copy()
-        for result in results:
-            x1, y1, x2, y2 = result['bbox']
-            freshness = result['freshness']
+    for result in results:
+        x1, y1, x2, y2 = result['bbox']
+        area = (x2 - x1) * (y2 - y1)
+        
+        # Cek apakah kotak ini sudah digunakan
+        overlap = False
+        for used in used_boxes:
+            ux1, uy1, ux2, uy2 = used
+            # Hitung intersection
+            ix1, iy1 = max(x1, ux1), max(y1, uy1)
+            ix2, iy2 = min(x2, ux2), min(y2, uy2)
             
-            # Warna berdasarkan kesegaran (case-insensitive)
-            color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255) if freshness.lower() == 'busuk' else (255, 255, 0)
-            
-            # Gambar kotak
-            cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
-            
-            # Tambah label
-            label = f"{result['part']}: {freshness} ({result['confidence']:.2f})"
-            cv2.putText(img_with_boxes, label, (x1, y1-10), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            if ix1 < ix2 and iy1 < iy2:
+                intersection = (ix2 - ix1) * (iy2 - iy1)
+                union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
+                iou = intersection / union if union > 0 else 0
+                
+                if iou > 0.5:  # Threshold overlap
+                    overlap = True
+                    break
+        
+        if not overlap:
+            filtered_results.append(result)
+            used_boxes.append((x1, y1, x2, y2))
 
-        # Tampilkan hasil
-        img_rgb = cv2.cvtColor(img_with_boxes, cv2.COLOR_BGR2RGB)
-        st.image(img_rgb, caption="Hasil Deteksi & Klasifikasi", use_container_width=True)
+    results = filtered_results  # Gunakan hasil yang sudah difilter
 
-        # Tampilkan tabel hasil
-        if results:
-            st.subheader("📋 Hasil Klasifikasi")
-            
-            # Buat dataframe
-            import pandas as pd
-            df_results = pd.DataFrame(results)
-            df_results = df_results[['part', 'freshness', 'confidence']]
-            df_results.columns = ['Part Ayam', 'Kesegaran', 'Confidence']
-            
-            st.dataframe(df_results, use_container_width=True)
-            
-            # Statistik
-            segar_count = len([r for r in results if r['freshness'].lower() == 'segar'])
-            busuk_count = len([r for r in results if r['freshness'].lower() == 'busuk'])
-            
-            st.markdown(f"""
-            📊 **Statistik:**
-            - 🟢 **Segar**: {segar_count} part
-            - 🔴 **Busuk**: {busuk_count} part
-            - ⏱️ **Waktu Deteksi**: {deteksi_time:.2f} detik
-            - ⏱️ **Waktu Klasifikasi**: {klasifikasi_time:.2f} detik
-            """)
-        else:
-            st.warning("❌ Tidak ada part ayam terdeteksi (confidence < threshold)")
+    # Gambar bounding box & label
+    img_with_boxes = img_bgr.copy()
+    for result in results:
+        x1, y1, x2, y2 = result['bbox']
+        freshness = result['freshness']
+        
+        # Warna berdasarkan kesegaran (case-insensitive)
+        color = (0, 255, 0) if freshness.lower() == 'segar' else (0, 0, 255) if freshness.lower() == 'busuk' else (255, 255, 0)
+        
+        # Gambar kotak
+        cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
+        
+        # Tambah label dengan background hitam untuk kontras
+        label = f"{result['part']}: {freshness} ({result['confidence']:.2f})"
+        text_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
+        
+        # Tentukan posisi label (di luar kotak)
+        label_x = x1
+        label_y = y1 - 10
+        
+        # Pastikan teks tidak keluar dari gambar
+        if label_y < 10:
+            label_y = y1 + text_size[1] + 10
+        
+        # Gambar background hitam untuk teks
+        cv2.rectangle(img_with_boxes, 
+                     (label_x, label_y - text_size[1] - 5), 
+                     (label_x + text_size[0], label_y + 5), 
+                     (0, 0, 0), -1)
+        
+        # Tambahkan teks
+        cv2.putText(img_with_boxes, label, (label_x, label_y),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+    # Tampilkan hasil
+    img_rgb = cv2.cvtColor(img_with_boxes, cv2.COLOR_BGR2RGB)
+    st.image(img_rgb, caption="Hasil Deteksi & Klasifikasi", use_container_width=True)
+
+    # Tampilkan tabel hasil
+    if results:
+        st.subheader("📋 Hasil Klasifikasi")
+        
+        # Buat dataframe
+        import pandas as pd
+        df_results = pd.DataFrame(results)
+        df_results = df_results[['part', 'freshness', 'confidence']]
+        df_results.columns = ['Part Ayam', 'Kesegaran', 'Confidence']
+        
+        st.dataframe(df_results, use_container_width=True)
+        
+        # Statistik (case-insensitive)
+        segar_count = len([r for r in results if r['freshness'].lower() == 'segar'])
+        busuk_count = len([r for r in results if r['freshness'].lower() == 'busuk'])
+        
+        st.markdown(f"""
+        📊 **Statistik:**
+        - 🟢 **Segar**: {segar_count} part
+        - 🔴 **Busuk**: {busuk_count} part
+        - ⏱️ **Waktu Deteksi**: {deteksi_time:.2f} detik
+        - ⏱️ **Waktu Klasifikasi**: {klasifikasi_time:.2f} detik
+        """)
+    else:
+        st.warning("❌ Tidak ada part ayam terdeteksi (confidence < threshold)")
+
 
 # --- KAMERA LIVE ---
 elif input_option == "Kamera Live":
@@ -392,3 +425,4 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
