@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 import os
 import time
+import shutil
 from huggingface_hub import hf_hub_download  
 
 # --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
@@ -303,6 +304,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
