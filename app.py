@@ -17,7 +17,6 @@ import time
 from huggingface_hub import hf_hub_download  
 
 # --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
-# --- DOWNLOAD MODEL OTOMATIS DARI HUGGING FACE ---
 @st.cache_resource
 def download_models():
     """Download model dari Hugging Face jika belum ada"""
@@ -59,8 +58,6 @@ def download_models():
             st.error(f"❌ Gagal download ResNet50: {e}")
     else:
         st.success("✅ ResNet50 already exists!")
-        except Exception as e:
-            st.error(f"❌ Gagal download ResNet50: {e}")
 
 # Jalankan download model
 download_models()
@@ -322,6 +319,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
