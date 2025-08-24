@@ -47,9 +47,26 @@ class ChickenPartDetector:
                     color = (0, 255, 0)  # Hijau
                     cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
                     
-                    # Tambahkan label
+                    # Tambahkan label dengan background hitam
                     label_text = f"{label} {conf:.2f}"
-                    cv2.putText(img_with_boxes, label_text, (x1, y1 - 10),
+                    text_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
+                    
+                    # Tentukan posisi label (di luar kotak)
+                    label_x = x1
+                    label_y = y1 - 10
+                    
+                    # Pastikan teks tidak keluar dari gambar
+                    if label_y < 10:
+                        label_y = y1 + text_size[1] + 10
+                    
+                    # Gambar background hitam untuk teks
+                    cv2.rectangle(img_with_boxes, 
+                                (label_x, label_y - text_size[1] - 5), 
+                                (label_x + text_size[0], label_y + 5), 
+                                (0, 0, 0), -1)
+                    
+                    # Tambahkan teks
+                    cv2.putText(img_with_boxes, label_text, (label_x, label_y),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                     
                     # Simpan deteksi
