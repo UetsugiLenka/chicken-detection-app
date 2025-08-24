@@ -22,7 +22,7 @@ class ChickenPartDetector:
         Deteksi part ayam dalam gambar
         """
         try:
-            # Deteksi dengan YOLO
+            # Deteksi dengan YOLO + NMS
             results = self.model(image, batch=1, conf=conf_threshold, imgsz=320, iou=0.5, verbose=False)
             result = results[0]
             boxes = result.boxes
@@ -42,6 +42,51 @@ class ChickenPartDetector:
                         label = self.class_names[cls_id]
                     else:
                         label = f"Part-{cls_id}"
+                    
+                    # Simpan deteksi untuk filter nanti
+                    detections.append({
+                        'bbox': (x1, y1, x2, y2),
+                        'label': label,
+                        'confidence': conf,
+                        'class_id': cls_id
+                    })
+                
+                # 🔍 Filter kotak yang tumpang tindih (manual NMS)
+                filtered_detections = []
+                used_boxes = []
+
+                for det in detections:
+                    x1, y1, x2, y2 = det['bbox']
+                    area = (x2 - x1) * (y2 - y1)
+                    
+                    # Cek apakah kotak ini sudah digunakan
+                    overlap = False
+                    for used in used_boxes:
+                        ux1, uy1, ux2, uy2 = used
+                        # Hitung intersection
+                        ix1, iy1 = max(x1, ux1), max(y1, uy1)
+                        ix2, iy2 = min(x2, ux2), min(y2, uy2)
+                        
+                        if ix1 < ix2 and iy1 < iy2:
+                            intersection = (ix2 - ix1) * (iy2 - iy1)
+                            union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
+                            iou = intersection / union if union > 0 else 0
+                            
+                            if iou > 0.5:  # Threshold overlap
+                                overlap = True
+                                break
+                    
+                    if not overlap:
+                        filtered_detections.append(det)
+                        used_boxes.append((x1, y1, x2, y2))
+
+                detections = filtered_detections
+                
+                # Gambar bounding box & label setelah difilter
+                for det in detections:
+                    x1, y1, x2, y2 = det['bbox']
+                    label = det['label']
+                    conf = det['confidence']
                     
                     # Gambar bounding box
                     color = (0, 255, 0)  # Hijau
@@ -68,17 +113,8 @@ class ChickenPartDetector:
                     # Tambahkan teks
                     cv2.putText(img_with_boxes, label_text, (label_x, label_y),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-                    
-                    # Simpan deteksi
-                    detections.append({
-                        'bbox': (x1, y1, x2, y2),
-                        'label': label,
-                        'confidence': conf,
-                        'class_id': cls_id
-                    })
             
             return detections, img_with_boxes
             
         except Exception as e:
             raise Exception(f"Detection error: {str(e)}")
-
