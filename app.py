@@ -43,12 +43,17 @@ def download_models():
     # Download ResNet50 dari Hugging Face
     resnet_path = "models/resnet_model.keras"
     if not os.path.exists(resnet_path):
-        st.info("📥 Downloading ResNet50 model...")
-        resnet_file = hf_hub_download(
-            repo_id="UetsugiLenka/chicken-models",
-            filename="resnet_model.keras"
-        )
-        shutil.move(resnet_file, resnet_path)
+        st.info("📥 Downloading ResNet50 model from Hugging Face...")
+        try:
+            hf_hub_download(
+                repo_id="UetsugiLenka/chicken-models",  # ⬅️ Ganti dengan username kamu
+                filename="resnet_model.keras",
+                revision="main",
+                local_dir="models"
+            )
+            st.success("✅ ResNet50 downloaded successfully!")
+        except Exception as e:
+            st.error(f"❌ Gagal download ResNet50: {e}")
 # Jalankan download model
 download_models()
 
@@ -304,6 +309,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
