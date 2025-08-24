@@ -43,9 +43,11 @@ def download_models():
     resnet_path = "models/resnet_model.keras"
     if not os.path.exists(resnet_path):
         st.info("📥 Downloading ResNet50 model...")
-        # Ganti dengan ID file kamu dari Google Drive
-        gdown.download("https://drive.google.com/uc?id=1WeES7dG4OvR_b7J-UWm_ESCjXPJjMv1v", resnet_path, quiet=False)
-
+        resnet_file = hf_hub_download(
+            repo_id="UetsugiLenka/chicken-models",
+            filename="resnet_model.keras"
+        )
+        os.rename(resnet_file, resnet_path)
 # Jalankan download model
 download_models()
 
@@ -301,4 +303,5 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
