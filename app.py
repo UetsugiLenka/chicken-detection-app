@@ -234,6 +234,10 @@ if input_option == "Upload Gambar":
 
 # --- KAMERA LIVE ---
 elif input_option == "Kamera Live":
+    elif input_option == "Kamera Live":
+    if not is_local:
+        st.warning("🚫 Fitur kamera hanya tersedia di lingkungan lokal.")
+    else:
     st.subheader("📹 Kamera Live - Deteksi Real-Time")
     st.info("💡 Izinkan akses kamera di browser. Tekan tombol 'Start' di bawah.")
     
@@ -327,6 +331,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
