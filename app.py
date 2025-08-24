@@ -92,13 +92,6 @@ st.success("✅ Model berhasil dimuat!")
 
 # --- SIDEBAR ---
 st.sidebar.header("📷 Pilihan Input")
-input_option = st.sidebar.radio(
-    "Pilih sumber gambar:",
-    ("Upload Gambar", "Kamera Live")
-)
-
-# --- SIDEBAR ---
-st.sidebar.header("📷 Pilihan Input")
 
 # Deteksi apakah di lokal atau cloud
 import socket
@@ -334,6 +327,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
