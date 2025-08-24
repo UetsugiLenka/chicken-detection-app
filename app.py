@@ -185,6 +185,37 @@ if input_option == "Upload Gambar":
                             })
                 klasifikasi_time = time.time() - klasifikasi_start
 
+        # 🔍 Filter results yang tumpang tindih
+        filtered_results = []
+        used_boxes = []
+
+        for result in results:
+            x1, y1, x2, y2 = result['bbox']
+            area = (x2 - x1) * (y2 - y1)
+            
+            # Cek apakah kotak ini sudah digunakan
+            overlap = False
+            for used in used_boxes:
+                ux1, uy1, ux2, uy2 = used
+                # Hitung intersection
+                ix1, iy1 = max(x1, ux1), max(y1, uy1)
+                ix2, iy2 = min(x2, ux2), min(y2, uy2)
+                
+                if ix1 < ix2 and iy1 < iy2:
+                    intersection = (ix2 - ix1) * (iy2 - iy1)
+                    union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
+                    iou = intersection / union if union > 0 else 0
+                    
+                    if iou > 0.5:  # Threshold overlap
+                        overlap = True
+                        break
+            
+            if not overlap:
+                filtered_results.append(result)
+                used_boxes.append((x1, y1, x2, y2))
+
+        results = filtered_results  # Gunakan hasil yang sudah difilter
+
         # Gambar bounding box & label
         img_with_boxes = img_bgr.copy()
         for result in results:
@@ -291,6 +322,37 @@ elif input_option == "Kamera Live":
                                     'bbox': (x1, y1, x2, y2)
                                 })
                     
+                    # 🔍 Filter results yang tumpang tindih (juga untuk kamera live)
+                    filtered_results = []
+                    used_boxes = []
+
+                    for result in results:
+                        x1, y1, x2, y2 = result['bbox']
+                        area = (x2 - x1) * (y2 - y1)
+                        
+                        # Cek apakah kotak ini sudah digunakan
+                        overlap = False
+                        for used in used_boxes:
+                            ux1, uy1, ux2, uy2 = used
+                            # Hitung intersection
+                            ix1, iy1 = max(x1, ux1), max(y1, uy1)
+                            ix2, iy2 = min(x2, ux2), min(y2, uy2)
+                            
+                            if ix1 < ix2 and iy1 < iy2:
+                                intersection = (ix2 - ix1) * (iy2 - iy1)
+                                union = area + (ux2 - ux1) * (uy2 - uy1) - intersection
+                                iou = intersection / union if union > 0 else 0
+                                
+                                if iou > 0.5:  # Threshold overlap
+                                    overlap = True
+                                    break
+                        
+                        if not overlap:
+                            filtered_results.append(result)
+                            used_boxes.append((x1, y1, x2, y2))
+
+                    results = filtered_results  # Gunakan hasil yang sudah difilter
+
                     # Gambar bounding box & label
                     img_with_boxes = img_bgr.copy()
                     for result in results:
@@ -330,12 +392,3 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
-
-
-
-
-
-
-
-
-
