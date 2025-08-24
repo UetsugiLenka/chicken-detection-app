@@ -242,6 +242,20 @@ if uploaded_file is not None:
         df_results.columns = ['Part Ayam', 'Kesegaran', 'Confidence']
         st.dataframe(df_results, use_container_width=True)
 
+         # Statistik (case-insensitive)
+        segar_count = len([r for r in results if r['freshness'].lower() == 'segar'])
+        busuk_count = len([r for r in results if r['freshness'].lower() == 'busuk'])
+        
+        st.markdown(f"""
+        📊 **Statistik:**
+        - 🟢 **Segar**: {segar_count} part
+        - 🔴 **Busuk**: {busuk_count} part
+        - ⏱️ **Waktu Deteksi**: {deteksi_time:.2f} detik
+        - ⏱️ **Waktu Klasifikasi**: {klasifikasi_time:.2f} detik
+        """)
+    else:
+        st.warning("❌ Tidak ada part ayam terdeteksi (confidence < threshold)")
+        
 # --- KAMERA LIVE ---
 elif input_option == "Kamera Live":
     if not is_local:
@@ -300,3 +314,4 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
