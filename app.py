@@ -47,7 +47,7 @@ def download_models():
             repo_id="UetsugiLenka/chicken-models",
             filename="resnet_model.keras"
         )
-        os.rename(resnet_file, resnet_path)
+        shutil.move(resnet_file, resnet_path)
 # Jalankan download model
 download_models()
 
@@ -303,5 +303,6 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
