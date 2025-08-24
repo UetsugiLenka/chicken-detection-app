@@ -28,43 +28,33 @@ def download_models():
     # Download YOLOv11m dari Hugging Face
     yolo_path = "models/yolo11m.pt"
     if not os.path.exists(yolo_path):
-        #st.info("📥 Downloading YOLOv11m model from Hugging Face...")
+        # st.info("📥 Downloading YOLOv11m model from Hugging Face...")  # ← dihapus
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models",  
+                repo_id="UetsugiLenka/chicken-models",
                 filename="yolo11m.pt",
                 revision="main",
                 local_dir="models"
             )
-            
-             """
-            st.success("✅ YOLOv11m downloaded successfully!")
+            # st.success("✅ YOLOv11m downloaded successfully!")  # ← dihapus
         except Exception as e:
             st.error(f"❌ Gagal download YOLOv11m: {e}")
-    else:
-        st.success("✅ YOLOv11m already exists!")
-         """
-
+    
     # Download ResNet50 dari Hugging Face
     resnet_path = "models/resnet_model.keras"
     if not os.path.exists(resnet_path):
-        st.info("📥 Downloading ResNet50 model from Hugging Face...")
+        # st.info("📥 Downloading ResNet50 model from Hugging Face...")  # ← dihapus
         try:
             hf_hub_download(
-                repo_id="UetsugiLenka/chicken-models",  
+                repo_id="UetsugiLenka/chicken-models",
                 filename="resnet_model.keras",
                 revision="main",
                 local_dir="models"
             )
-            
-             """
-            st.success("✅ ResNet50 downloaded successfully!")
+            # st.success("✅ ResNet50 downloaded successfully!")  # ← dihapus
         except Exception as e:
             st.error(f"❌ Gagal download ResNet50: {e}")
-    else:
-        st.success("✅ ResNet50 already exists!")
-         """
-
+        
 # Jalankan download model
 download_models()
 
@@ -325,6 +315,7 @@ elif input_option == "Kamera Live":
 # --- FOOTER ---
 st.markdown("---")
 st.caption("🐔 Deteksi & Klasifikasi Daging Ayam - Skripsi 2025")
+
 
 
 
